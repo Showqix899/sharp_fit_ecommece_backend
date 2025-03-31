@@ -3,7 +3,7 @@ from rest_framework import serializers
 from .models import Cart, CartItem
 from products.serializers import ProductSerializer  # Assuming you have a ProductSerializer
 from django.contrib.auth import get_user_model
-from products.models import Product
+from products.models import Product,Size,Color
 
 # CartItem Serializer
 class CartItemSerializer(serializers.ModelSerializer):
@@ -12,7 +12,7 @@ class CartItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CartItem
-        fields = ['product', 'quantity', 'subtotal']
+        fields = ['product','size','color', 'quantity', 'subtotal']
 
 # Cart Serializer
 class CartSerializer(serializers.ModelSerializer):
@@ -24,28 +24,44 @@ class CartSerializer(serializers.ModelSerializer):
         model = Cart
         fields = ['id', 'user', 'status', 'created_at', 'updated_at', 'total_price', 'total_items', 'items']
 
-
 class AddToCartSerializer(serializers.Serializer):
     product_id = serializers.IntegerField()
+    size = serializers.IntegerField(required=True)  # Ensure it's an ID, not a CharField
+    color = serializers.IntegerField(required=True)
     quantity = serializers.IntegerField(default=1)
 
-    def validate_product_id(self, value):
-        """
-        Validate that the product exists.
-        """
-        try:
-            product = Product.objects.get(id=value)
-        except Product.DoesNotExist:
-            raise serializers.ValidationError("Product not found.")
-        return value
+    def validate(self, data):
+        product_id = data.get('product_id')
+        size_id = data.get('size')
+        color_id = data.get('color')
 
-    def validate_quantity(self, value):
-        """
-        Ensure that the quantity is positive.
-        """
-        if value <= 0:
-            raise serializers.ValidationError("Quantity must be a positive integer.")
-        return value
+        # Validate Product
+        try:
+            product = Product.objects.get(id=product_id)
+        except Product.DoesNotExist:
+            raise serializers.ValidationError({'product_id': 'Product not found.'})
+
+        # Validate Size
+        try:
+            size = Size.objects.get(id=size_id)
+        except Size.DoesNotExist:
+            raise serializers.ValidationError({'size': 'Invalid size selected.'})
+
+        # Validate Color
+        try:
+            color = Color.objects.get(id=color_id)
+        except Color.DoesNotExist:
+            raise serializers.ValidationError({'color': 'Invalid color selected.'})
+
+        # Check if this product matches the provided size and color
+        if product.sizes != size or product.colors != color:
+            raise serializers.ValidationError("Product with the selected size and color not found.")
+
+        return data
+        
+
+        
+        
 
 class RemoveFromCartSerializer(serializers.Serializer):
     product_id = serializers.IntegerField()

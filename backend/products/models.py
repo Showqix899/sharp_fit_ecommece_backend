@@ -17,8 +17,8 @@ class Product(models.Model):
     description = models.TextField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
     stock = models.PositiveIntegerField(default=0)
-    sizes = models.ManyToManyField(Size, related_name='products')
-    colors = models.ManyToManyField(Color, related_name='products')
+    sizes = models.ForeignKey(Size, related_name='products',on_delete=models.CASCADE,null=True,blank=True)
+    colors = models.ForeignKey(Color, related_name='products',on_delete=models.CASCADE,null=True,blank=True)
     image = models.ImageField(upload_to='product_images/', blank=True, null=True)  # Cloud storage later
 
     def __str__(self):

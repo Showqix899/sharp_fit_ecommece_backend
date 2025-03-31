@@ -22,6 +22,8 @@ class CreateOrderView(APIView):
             OrderItem.objects.create(
                 order=order,
                 product=cart_item.product,
+                size=cart_item.size,
+                color=cart_item.color,
                 quantity=cart_item.quantity,
                 subtotal=cart_item.subtotal
             )

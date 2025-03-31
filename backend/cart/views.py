@@ -22,18 +22,20 @@ class AddToCartView(APIView):
         serializer = AddToCartSerializer(data=request.data)
         if serializer.is_valid():
             product_id = serializer.validated_data['product_id']
+            size = serializer.validated_data['size']
+            color = serializer.validated_data['color']
             quantity = serializer.validated_data['quantity']
 
             product = Product.objects.get(id=product_id)
             cart, created = Cart.objects.get_or_create(user=request.user, status='active')
 
-            cart_item, created = CartItem.objects.get_or_create(cart=cart, product=product)
+            cart_item, created = CartItem.objects.get_or_create(cart=cart, product=product,size=size,color=color,defaults={'quantity':quantity})
 
             if not created:
                 cart_item.quantity += quantity
                 cart_item.save()
 
-            return Response({"message": f"{product.name} added to the cart."}, status=status.HTTP_200_OK)
+            return Response({"message": f"{product.name} (Size:{size}, Color:{color}) added to the cart."}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class RemoveFromCartView(APIView):

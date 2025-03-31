@@ -39,8 +39,13 @@ class Cart(models.Model):
 class CartItem(models.Model):
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name="items")
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    size = models.CharField(max_length=20, null=True, blank=True)  # Added size field
+    color = models.CharField(max_length=20, null=True, blank=True)  # Added color field
     quantity = models.PositiveIntegerField(default=1)
     subtotal = models.DecimalField(max_digits=10, decimal_places=2, editable=False)
+
+    class Meta:
+        unique_together = ('cart', 'product', 'size', 'color')  # Ensures uniqueness of same product variation
 
     def save(self, *args, **kwargs):
         """

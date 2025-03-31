@@ -32,6 +32,8 @@ class Order(models.Model):
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="items")
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    size = models.CharField(max_length=20, null=True, blank=True)  # Added size field
+    color = models.CharField(max_length=20, null=True, blank=True)  # Added color field
     quantity = models.PositiveIntegerField()
     subtotal = models.DecimalField(max_digits=10, decimal_places=2, editable=False)
 
