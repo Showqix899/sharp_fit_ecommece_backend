@@ -1,29 +1,30 @@
-# from rest_framework import generics
-# from .models import Product, Size, Color
-# from .serializers import ProductSerializer, SizeSerializer, ColorSerializer
-# # Product Views
-# class ProductListCreateView(generics.ListCreateAPIView):
-#     queryset = Product.objects.all()
-#     serializer_class = ProductSerializer
+from rest_framework import generics
+from .models import Product, Size, Color
+from .serializers import ProductSerializer, SizeSerializer, ColorSerializer
 
-# class ProductRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
-#     queryset = Product.objects.all()
-#     serializer_class = ProductSerializer
 
-# # Size Views
-# class SizeListCreateView(generics.ListCreateAPIView):
-#     queryset = Size.objects.all()
-#     serializer_class = SizeSerializer
 
-# class SizeRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
-#     queryset = Size.objects.all()
-#     serializer_class = SizeSerializer
+#size view
+class SizeListCreateView(generics.ListCreateAPIView):
+    queryset = Size.objects.all()
+    serializer_class = SizeSerializer
 
-# # Color Views
-# class ColorListCreateView(generics.ListCreateAPIView):
-#     queryset = Color.objects.all()
-#     serializer_class = ColorSerializer
 
-# class ColorRetrieveUpdateDeleteView(generics.RetrieveUpdateDestroyAPIView):
-#     queryset = Color.objects.all()
-#     serializer_class = ColorSerializer
+#color view
+class ColorListCreateView(generics.ListCreateAPIView):
+    queryset = Color.objects.all()
+    serializer_class = ColorSerializer
+
+
+#listing and creating Product view
+class ProductListCreateView(generics.ListCreateAPIView):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+
+
+
+
+#product  retrive update destroy view
+class ProductRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer

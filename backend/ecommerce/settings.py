@@ -53,9 +53,10 @@ INSTALLED_APPS = [
     # Custom apps
     'users',
     'products',
-    'orders',
     'payments',
     'activity_log',
+    'cart',
+    'orders'
 
 ]
 
@@ -168,6 +169,7 @@ CORS_ALLOW_ALL_ORIGINS = True
 
 
 # JWT Authentication settings
+
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
@@ -177,3 +179,14 @@ REST_FRAMEWORK = {
     ),
 }
 
+
+#jwt configuration
+from datetime import timedelta
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),  # Token expires in 60 minutes
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),  # Refresh token expires in 1 day
+    'ROTATE_REFRESH_TOKENS': True,  # Generates a new refresh token on use
+    'BLACKLIST_AFTER_ROTATION': True,  # Blacklist old refresh tokens
+    
+}
