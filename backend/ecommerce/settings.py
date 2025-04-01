@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     # 'dj_rest_auth',
     # 'dj_rest_auth.registration',
     'storages',
+    'stripe',
 
     # Custom apps
     'users',
@@ -162,7 +163,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 # CORS settings
-CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOWED_ORIGINS = [
+    "http://127.0.0.1:5500",  # Your frontend origin
+    "http://localhost:5500",
+]
 
 
 # REST framework settings
@@ -196,3 +200,9 @@ SIMPLE_JWT = {
 CELERY_BROKER_URL = "redis://localhost:6379/0"
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
+
+
+
+#stripe payment settings
+STRIPE_PUBLIC_KEY = "pk_test_51Qo4dGRHBRKahAmRIluar3v1IzEWAKkf6efrgoAkzWU7T0VvpD729G5LKjFE9ZQ73FlVESOUjNJ3v5ZvKO8IF0W400xqLRW2Lv"
+STRIPE_SECRET_KEY = "sk_test_51Qo4dGRHBRKahAmRu2IHigWLAYboDrmv56L764jydLscrEZykzYkGAoGZMn6buHYN8gUKp3X5GhqBM9YEYyqqFze00xH5hN4hd"
