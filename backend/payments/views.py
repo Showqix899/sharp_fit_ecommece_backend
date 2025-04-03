@@ -29,7 +29,12 @@ class CreatePaymentIntentView(APIView):
     def post(self, request, order_id):
         user = request.user
         # Validate order and user (Ensure this order belongs to the authenticated user)
-        order = get_object_or_404(Order, id=order_id, user=user)
+        try:
+            order = get_object_or_404(Order, id=order_id, user=user,status="pending")
+            print("found active order")
+        except Order.DoesNotExist:
+            print("no active order")
+            return Response("no active order")
 
         try:
             # Create a payment intent
@@ -39,9 +44,21 @@ class CreatePaymentIntentView(APIView):
                 metadata={'order_id': order.id},
             )
 
+            payment=Payment.objects.create(
+                order=order,
+                amount = order.total_price,
+                status="pending",
+                stripe_payment_intent_id=payment_intent.id,
+            )
+            payment.save()
+            order.status="completed"
+            order.save()
+
+
             return Response({'client_secret': payment_intent.client_secret}, status=status.HTTP_200_OK)
 
         except Exception as e:
+            print(str(e))
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 

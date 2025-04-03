@@ -12,6 +12,14 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 
+import os
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
+
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -19,8 +27,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-js%3b#if6qc2nepr%5sr0@i=(sg05=5&6svfalp=4(&p$-h&&u'
+# SECURITY WARNING: keep the secret key used in production secret
+SECRET_KEY = os.getenv("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -50,6 +58,7 @@ INSTALLED_APPS = [
     # 'dj_rest_auth.registration',
     'storages',
     'stripe',
+    'django_celery_beat',
 
     # Custom apps
     'users',
@@ -57,7 +66,7 @@ INSTALLED_APPS = [
     'payments',
     'activity_log',
     'cart',
-    'orders'
+    'orders',
 
 ]
 
@@ -67,8 +76,8 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'kingstupid245@gmail.com'  # Replace with your email
-EMAIL_HOST_PASSWORD = 'ejfj cvhx tkur msru'  # Replace with your App Password
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
 
 
 
@@ -188,7 +197,7 @@ REST_FRAMEWORK = {
 from datetime import timedelta
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),  # Token expires in 60 minutes
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=120),  # Token expires in 60 minutes
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),  # Refresh token expires in 1 day
     'ROTATE_REFRESH_TOKENS': True,  # Generates a new refresh token on use
     'BLACKLIST_AFTER_ROTATION': True,  # Blacklist old refresh tokens
@@ -201,8 +210,11 @@ CELERY_BROKER_URL = "redis://localhost:6379/0"
 CELERY_ACCEPT_CONTENT = ["json"]
 CELERY_TASK_SERIALIZER = "json"
 
+# To prevent warning about broker retries in Celery 6.0+
+CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
+
 
 
 #stripe payment settings
-STRIPE_PUBLIC_KEY = "pk_test_51Qo4dGRHBRKahAmRIluar3v1IzEWAKkf6efrgoAkzWU7T0VvpD729G5LKjFE9ZQ73FlVESOUjNJ3v5ZvKO8IF0W400xqLRW2Lv"
-STRIPE_SECRET_KEY = "sk_test_51Qo4dGRHBRKahAmRu2IHigWLAYboDrmv56L764jydLscrEZykzYkGAoGZMn6buHYN8gUKp3X5GhqBM9YEYyqqFze00xH5hN4hd"
+STRIPE_PUBLIC_KEY = os.getenv("STRIPE_PUBLIC_KEY")
+STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")

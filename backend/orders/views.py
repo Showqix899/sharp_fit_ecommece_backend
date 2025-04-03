@@ -61,6 +61,6 @@ class CancelOrderView(APIView):
         if order.status in ['shipped', 'delivered']:
             return Response({'message': 'Order cannot be canceled after it is shipped/delivered'}, status=status.HTTP_400_BAD_REQUEST)
 
-        order.status = 'canceled'
+        order.status = 'cancelled'
         order.save()
         return Response({'message': 'Order canceled successfully'}, status=status.HTTP_200_OK)

@@ -53,6 +53,7 @@ class RemoveFromCartView(APIView):
             cart_item = CartItem.objects.filter(cart=cart, product_id=product_id).first()
 
             if cart_item:
+                cart_item.state="canceled"
                 cart_item.delete()
                 return Response({"message": "Product removed from the cart."}, status=status.HTTP_200_OK)
             return Response({"message": "Product not found in the cart."}, status=status.HTTP_404_NOT_FOUND)
