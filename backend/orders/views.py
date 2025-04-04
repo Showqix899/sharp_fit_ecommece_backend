@@ -6,6 +6,14 @@ from .models import Order, OrderItem
 from cart.models import Cart, CartItem
 from .serializers import OrderSerializer
 
+
+#for sending notification 
+from notifications.tasks import send_notification_email
+from notifications.models import Notification
+
+
+
+#create order view
 class CreateOrderView(APIView):
     def post(self, request):
         user = request.user
@@ -39,13 +47,14 @@ class CreateOrderView(APIView):
 
         return Response({'message': 'Order created successfully', 'order_id': order.id}, status=status.HTTP_201_CREATED)
 
+#order list view
 class OrderListView(APIView):
     def get(self, request):
         user = request.user
         orders = Order.objects.filter(user=user).order_by('-created_at')
         serializer = OrderSerializer(orders, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
+#get order details view
 class OrderDetailView(APIView):
     def get(self, request, order_id):
         user = request.user
@@ -53,6 +62,8 @@ class OrderDetailView(APIView):
         serializer = OrderSerializer(order)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+
+#cancel order view
 class CancelOrderView(APIView):
     def post(self, request, order_id):
         user = request.user
@@ -63,4 +74,20 @@ class CancelOrderView(APIView):
 
         order.status = 'cancelled'
         order.save()
+        # Send notification email
+        user_email = user.email
+        message= f"Your order {order.id} has been canceled."
+        subject = "Order Cancellation Notice"
+
+        # Create a notification record
+        notification= Notification.objects.create(
+            user=user,
+            title="Order Canceled",
+            message=message
+        )
+
+        notification.save()
+        # Send email notification asynchronously using Celery
+        send_notification_email.delay(user_email, subject, message)
+
         return Response({'message': 'Order canceled successfully'}, status=status.HTTP_200_OK)

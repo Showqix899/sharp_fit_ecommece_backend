@@ -22,10 +22,11 @@ class UserManager(BaseUserManager):
 class CustomUser(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True)
     role=models.CharField(max_length=20,choices=(('ADMIN','admin'),('USER','user')),default='USER')
+    default_device = models.CharField(max_length=255, null=True, blank=True)
     is_active = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
 
     objects = UserManager()
-
+    
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []

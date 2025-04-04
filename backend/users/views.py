@@ -10,16 +10,50 @@ from rest_framework import status
 from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import RegisterSerializer,UserSerializer
 
+
+#permissions
+from rest_framework.permissions import IsAuthenticated 
+from .permissions import IsAdminUser #custom permission
+
+#getting device info
+from device_detector import DeviceDetector
+
+
+#notification
+from notifications.models import Notification
+from notifications.tasks import send_notification_email
+
 User = get_user_model()
+
+
+
+
 
 # 🔹 1️⃣ User Registration View
 class RegisterView(APIView):
     def post(self, request):
+
+        #get meta data
+
+        user_agent = request.META.get('HTTP_USER_AGENT','')
+
+        #get device info
+        device = DeviceDetector(user_agent).parse()
+        device_type = device.device_type() or "unknown"  # e.g., 'desktop', 'mobile', 'tablet'
+        device_name = device.device_brand() or "unknown" # e.g., 'Apple', 'Samsung', etc.
+        device_model = device.device_model() or "unknown" # e.g., 'iPhone', 'Galaxy S21', etc.
+        # device_info = {
+        #     'device_type': device_type,
+        #     'device_name': device_name,
+        #     'device_model': device_model,
+        # }
+
         serializer = RegisterSerializer(data=request.data)
         if serializer.is_valid():
             user = User.objects.create_user(
                 email=serializer.validated_data['email'],
-                password=serializer.validated_data['password']
+                password=serializer.validated_data['password'],
+                default_device=device_model,
             
             )
             user.is_active = False  # User inactive until email verified
@@ -34,13 +68,18 @@ class RegisterView(APIView):
             message += "Click the link below to activate your account:\n\n"
             message += f"{activation_link}\n\n"
             message += "If you did not register, please ignore this email."
+            message += f"\n\nDevice Info:\nType: {device_type}\nName: {device_name}\nModel: {device_model}"
 
-            send_mail(
-                "Activate Your Account",
+            # Send email using Celery task
+            subject = "Activate Your Account"
+            send_notification_email.delay(
+                user.email,
+                subject,
                 message,
-                "no-reply@example.com",
-                [user.email],
             )
+            
+            
+
 
             return Response({'message': 'Check your email to activate your account!'}, status=status.HTTP_201_CREATED)
         
@@ -50,12 +89,25 @@ class RegisterView(APIView):
 
 class AdminRegisterView(APIView):
     def post(self, request):
+
+
+        user_agent = request.META.get('HTTP_USER_AGENT','')
+
+        #get device info
+        device = DeviceDetector(user_agent).parse()
+        device_type = device.device_type() or "unknown"  # e.g., 'desktop', 'mobile', 'tablet'
+        device_name = device.device_brand() or "unknown"  # e.g., 'Apple', 'Samsung', etc.
+        device_model = device.device_model() or "unknown" # e.g., 'iPhone', 'Galaxy S21', etc.
+
+
+
         serializer = RegisterSerializer(data=request.data)
         if serializer.is_valid():
             user = User.objects.create_user(
                 email=serializer.validated_data['email'],
                 password=serializer.validated_data['password'],
-                role='ADMIN'
+                role='ADMIN',
+                default_device=device_model
             
             )
             user.is_active = False  # User inactive until email verified
@@ -70,12 +122,15 @@ class AdminRegisterView(APIView):
             message += "Click the link below to activate your account:\n\n"
             message += f"{activation_link}\n\n"
             message += "If you did not register, please ignore this email."
+            message += f"\n\nDevice Info:\nType: {device_type}\nName: {device_name}\nModel: {device_model}"
 
-            send_mail(
-                "Activate Your Account",
+
+            # Send email using Celery task
+            subject = "Activate Your Account as Admin"
+            send_notification_email.delay(
+                user.email,
+                subject,
                 message,
-                "no-reply@example.com",
-                [user.email],
             )
 
             return Response({'message': 'Check your email to activate your account!'}, status=status.HTTP_201_CREATED)
@@ -107,6 +162,8 @@ class LoginView(APIView):
         password = request.data.get("password")
         
         user = User.objects.filter(email=email).first()
+        
+
         if user and user.check_password(password):
             if not user.is_active:
                 return Response({'message': 'Account is not activated!'}, status=status.HTTP_403_FORBIDDEN)
@@ -117,6 +174,30 @@ class LoginView(APIView):
                 'access': str(refresh.access_token),
                 'role':user.role
             }, status=status.HTTP_200_OK)
+        
+        #get the current device info
+        get_current_device = request.META.get('HTTP_USER_AGENT','')
+        device = DeviceDetector(get_current_device).parse()
+        current_device = device.device_model() or "unknown"  # e.g., 'iPhone', 'Galaxy S21', etc.
+
+        if user and user.default_device != current_device:
+            subject = "New Device Login Alert"
+            message = f"Hello {user.email},\n\n"
+            message += "A login attempt was made from a new device:\n\n"
+            message += f"Device: {current_device}\n\n"
+            message += "If this was you, please ignore this email. If not, please secure your account."
+            send_notification_email.delay(
+                email,
+                subject,
+                message,
+            )
+        
+
+        # Update default device if it's the first login or missing
+        if not user.default_device:
+            user.default_device = current_device
+            user.save()
+
         
         return Response({'message': 'Invalid credentials!'}, status=status.HTTP_401_UNAUTHORIZED)
 
@@ -186,7 +267,8 @@ class PasswordResetConfirmView(APIView):
 
 #user list view
 class UserListView(APIView):
-    
+    permission_classes=[IsAuthenticated,IsAdminUser]
+
     def get(self,request):
 
         users = User.objects.all()

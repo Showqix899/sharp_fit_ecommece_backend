@@ -24,6 +24,10 @@ class CartSerializer(serializers.ModelSerializer):
         model = Cart
         fields = ['id', 'user', 'status', 'created_at', 'updated_at', 'total_price', 'total_items', 'items']
 
+
+
+
+# AddToCart Serializer
 class AddToCartSerializer(serializers.Serializer):
     product_id = serializers.IntegerField()
     size = serializers.IntegerField(required=True)  # Ensure it's an ID, not a CharField
@@ -62,7 +66,7 @@ class AddToCartSerializer(serializers.Serializer):
 
         
         
-
+# cart remove serializer
 class RemoveFromCartSerializer(serializers.Serializer):
     product_id = serializers.IntegerField()
 
@@ -76,6 +80,7 @@ class RemoveFromCartSerializer(serializers.Serializer):
             raise serializers.ValidationError("Product not found.")
         return value
 
+# Checkout Serializer
 class CheckoutSerializer(serializers.Serializer):
     def validate(self, data):
         """

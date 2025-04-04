@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'drf_yasg',
     'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
     # Remove dj_rest_auth and allauth
     # 'allauth',
     # 'allauth.account',
@@ -67,6 +68,7 @@ INSTALLED_APPS = [
     'activity_log',
     'cart',
     'orders',
+    'notifications',
 
 ]
 

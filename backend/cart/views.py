@@ -7,6 +7,15 @@ from rest_framework.permissions import AllowAny
 from .models import Cart, CartItem
 from .serializers import CartSerializer, AddToCartSerializer, RemoveFromCartSerializer
 
+
+
+# Cart and CartItem views
+
+
+
+
+
+# CartDetailView: Get the details of the user's active cart
 class CartDetailView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -14,7 +23,13 @@ class CartDetailView(APIView):
         cart, created = Cart.objects.get_or_create(user=request.user, status='active')
         serializer = CartSerializer(cart)
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
 
+
+
+
+
+# AddToCartView: Add a product to the user's cart
 class AddToCartView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -37,7 +52,11 @@ class AddToCartView(APIView):
 
             return Response({"message": f"{product.name} (Size:{size}, Color:{color}) added to the cart."}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
 
+
+
+# RemoveFromCartView: Remove a product from the user's cart
 class RemoveFromCartView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -60,6 +79,9 @@ class RemoveFromCartView(APIView):
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
+
+# UpdateCartView: Update the quantity of a product in the user's cart
 class UpdateCartView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -80,6 +102,9 @@ class UpdateCartView(APIView):
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
+
+# CartListView: List all carts (for admin purposes)
 class CartListView(APIView):
     # permission_classes = [IsAdminUser]
 

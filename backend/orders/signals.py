@@ -4,6 +4,7 @@ from django.utils.timezone import now, timedelta
 from orders.models import Order
 from products.models import Product
 
+
 # Restock products if an order is canceled
 @receiver(post_save, sender=Order)
 def restock_on_order_cancel(sender, instance, **kwargs):

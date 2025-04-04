@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.urls import path, include
+from activity_log.views import list_log
 
 
 
@@ -31,6 +32,7 @@ urlpatterns = [
     path('api/',include('orders.urls')),
     path('api/', include('cart.urls')),
     path('api/',include('payments.urls')),
+    path('logs/',list_log.as_view(),name='list_log'),
 
     #swagger url
     path('swagger<format>/', schema_view.without_ui(cache_timeout=0), name='schema-json'),

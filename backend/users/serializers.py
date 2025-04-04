@@ -8,6 +8,7 @@ class RegisterSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
     role=serializers.CharField(read_only=True)
+    default_deviece=serializers.CharField(read_only=True)
 
 
 
