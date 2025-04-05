@@ -52,11 +52,6 @@ INSTALLED_APPS = [
     'drf_yasg',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
-    # Remove dj_rest_auth and allauth
-    # 'allauth',
-    # 'allauth.account',
-    # 'dj_rest_auth',
-    # 'dj_rest_auth.registration',
     'storages',
     'stripe',
     'django_celery_beat',
@@ -220,3 +215,17 @@ CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
 #stripe payment settings
 STRIPE_PUBLIC_KEY = os.getenv("STRIPE_PUBLIC_KEY")
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
+
+
+
+# caching settings
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/1",  # Use different DB if needed
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
+}
+

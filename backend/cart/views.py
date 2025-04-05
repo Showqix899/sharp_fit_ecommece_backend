@@ -2,11 +2,18 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
+
+
 from products.models import Product
+
+
+
 from rest_framework.permissions import AllowAny
 from .models import Cart, CartItem
 from .serializers import CartSerializer, AddToCartSerializer, RemoveFromCartSerializer
 
+
+from django.core.cache import cache
 
 
 # Cart and CartItem views
@@ -34,7 +41,7 @@ class AddToCartView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
-        serializer = AddToCartSerializer(data=request.data)
+        serializer = AddToCartSerializer(data=request.data,context={'request': request})
         if serializer.is_valid():
             product_id = serializer.validated_data['product_id']
             size = serializer.validated_data['size']
@@ -74,6 +81,11 @@ class RemoveFromCartView(APIView):
             if cart_item:
                 cart_item.state="canceled"
                 cart_item.delete()
+
+                # Update the cache for the cart
+                
+
+                
                 return Response({"message": "Product removed from the cart."}, status=status.HTTP_200_OK)
             return Response({"message": "Product not found in the cart."}, status=status.HTTP_404_NOT_FOUND)
 
@@ -97,6 +109,8 @@ class UpdateCartView(APIView):
             if cart_item:
                 cart_item.quantity = quantity
                 cart_item.save()
+
+                
                 return Response({"message": f"Quantity of {cart_item.product.name} updated to {quantity}."}, status=status.HTTP_200_OK)
             return Response({"message": "Product not found in the cart."}, status=status.HTTP_404_NOT_FOUND)
 
@@ -106,8 +120,7 @@ class UpdateCartView(APIView):
 
 # CartListView: List all carts (for admin purposes)
 class CartListView(APIView):
-    # permission_classes = [IsAdminUser]
-
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         carts = Cart.objects.all()
         serializer = CartSerializer(carts, many=True)

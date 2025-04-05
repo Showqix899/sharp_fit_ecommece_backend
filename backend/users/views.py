@@ -4,6 +4,9 @@ from django.core.mail import send_mail
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.contrib.sites.shortcuts import get_current_site
+from django.core.cache import cache
+
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status

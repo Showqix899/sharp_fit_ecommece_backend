@@ -1,7 +1,13 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
+
+
+
 from django.shortcuts import get_object_or_404
+from django.core.cache import cache
+
+
 from .models import Order, OrderItem
 from cart.models import Cart, CartItem
 from .serializers import OrderSerializer
@@ -40,20 +46,39 @@ class CreateOrderView(APIView):
         order.total_price = order_total
         order.save()
 
+        #order cache updation
+        cache.delete(f'order_{user.id}')
+
+
+
         # Clear the cart
         cart.items.all().delete()
         cart.status = 'checked_out'
         cart.save()
 
+
         return Response({'message': 'Order created successfully', 'order_id': order.id}, status=status.HTTP_201_CREATED)
 
 #order list view
 class OrderListView(APIView):
+
     def get(self, request):
-        user = request.user
-        orders = Order.objects.filter(user=user).order_by('-created_at')
-        serializer = OrderSerializer(orders, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        user= request.user
+        cache_key = f'order_{user.id}'
+        order_response=cache.get(cache_key)
+        if not order_response:
+            orders = Order.objects.filter(user=user).order_by('-created_at')
+            serializer = OrderSerializer(orders, many=True)
+            order_response = serializer.data
+            # Cache the order response for 5 minutes
+            cache.set(cache_key, order_response, timeout=60*5)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response(order_response, status=status.HTTP_200_OK)
+        
+
+
+
 #get order details view
 class OrderDetailView(APIView):
     def get(self, request, order_id):
@@ -74,6 +99,12 @@ class CancelOrderView(APIView):
 
         order.status = 'cancelled'
         order.save()
+
+        # Update the cache
+        cache.delete(f'order_{user.id}')
+
+        
+        
         # Send notification email
         user_email = user.email
         message= f"Your order {order.id} has been canceled."
@@ -87,6 +118,8 @@ class CancelOrderView(APIView):
         )
 
         notification.save()
+        
+        
         # Send email notification asynchronously using Celery
         send_notification_email.delay(user_email, subject, message)
 

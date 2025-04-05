@@ -1,91 +1,93 @@
-# serializers.py in the cart app
 from rest_framework import serializers
 from .models import Cart, CartItem
-from products.serializers import ProductSerializer  # Assuming you have a ProductSerializer
-from django.contrib.auth import get_user_model
-from products.models import Product,Size,Color
+from products.models import Product, Size, Color
+from products.serializers import ProductSerializer
 
-# CartItem Serializer
+
+# CartItem Serializer for viewing cart
 class CartItemSerializer(serializers.ModelSerializer):
-    product = ProductSerializer()  # To include product details in the cart item
+    product = ProductSerializer(read_only=True)
     subtotal = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
 
     class Meta:
         model = CartItem
-        fields = ['product','size','color', 'quantity', 'subtotal']
+        fields = ['product', 'size', 'color', 'quantity', 'subtotal']
 
-# Cart Serializer
+
+# Cart Serializer for viewing cart
 class CartSerializer(serializers.ModelSerializer):
-    items = CartItemSerializer(many=True, read_only=True)  # All items in the cart
-    total_price = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
-    total_items = serializers.IntegerField(read_only=True)
+    items = CartItemSerializer(many=True, read_only=True)
+    total_price = serializers.SerializerMethodField()
+    total_items = serializers.SerializerMethodField()
 
     class Meta:
         model = Cart
         fields = ['id', 'user', 'status', 'created_at', 'updated_at', 'total_price', 'total_items', 'items']
 
+    def get_total_price(self, obj):
+        return obj.total_price()
+
+    def get_total_items(self, obj):
+        return obj.total_items()
 
 
-
-# AddToCart Serializer
+# Serializer for adding product to cart
 class AddToCartSerializer(serializers.Serializer):
     product_id = serializers.IntegerField()
-    size = serializers.IntegerField(required=True)  # Ensure it's an ID, not a CharField
-    color = serializers.IntegerField(required=True)
-    quantity = serializers.IntegerField(default=1)
+    size = serializers.IntegerField()
+    color = serializers.IntegerField()
+    quantity = serializers.IntegerField(min_value=1)
 
     def validate(self, data):
+        user = self.context['request'].user
         product_id = data.get('product_id')
         size_id = data.get('size')
         color_id = data.get('color')
 
-        # Validate Product
         try:
             product = Product.objects.get(id=product_id)
         except Product.DoesNotExist:
-            raise serializers.ValidationError({'product_id': 'Product not found.'})
+            raise serializers.ValidationError({'product_id': 'Invalid product.'})
 
-        # Validate Size
         try:
-            size = Size.objects.get(id=size_id)
+            size_obj = Size.objects.get(id=size_id)
         except Size.DoesNotExist:
             raise serializers.ValidationError({'size': 'Invalid size selected.'})
 
-        # Validate Color
         try:
-            color = Color.objects.get(id=color_id)
+            color_obj = Color.objects.get(id=color_id)
         except Color.DoesNotExist:
             raise serializers.ValidationError({'color': 'Invalid color selected.'})
 
-        # Check if this product matches the provided size and color
-        if product.sizes != size or product.colors != color:
-            raise serializers.ValidationError("Product with the selected size and color not found.")
+        # Ensure the selected size and color are valid for the product
+        if not product.sizes.filter(id=size_id).exists():
+            raise serializers.ValidationError({'size': 'This size is not available for the selected product.'})
+        if not product.colors.filter(id=color_id).exists():
+            raise serializers.ValidationError({'color': 'This color is not available for the selected product.'})
+
+        # Check if cart item already exists with same combination
+        cart, _ = Cart.objects.get_or_create(user=user, status='active')
+        if CartItem.objects.filter(cart=cart, product=product, size=size_obj.name, color=color_obj.name).exists():
+            raise serializers.ValidationError("This product with the selected size and color is already in your cart.")
 
         return data
-        
 
-        
-        
-# cart remove serializer
+
+# Serializer for removing from cart
 class RemoveFromCartSerializer(serializers.Serializer):
     product_id = serializers.IntegerField()
 
     def validate_product_id(self, value):
-        """
-        Validate that the product exists in the cart.
-        """
         try:
-            product = Product.objects.get(id=value)
+            Product.objects.get(id=value)
         except Product.DoesNotExist:
-            raise serializers.ValidationError("Product not found.")
+            raise serializers.ValidationError("Invalid product.")
         return value
 
-# Checkout Serializer
+
+# Checkout (you already had this, kept as-is)
 class CheckoutSerializer(serializers.Serializer):
     def validate(self, data):
-        """
-        You can add custom validation logic here, e.g., check if the cart is empty.
-        """
         cart = Cart.objects.get(user=self.context['request'].user, status='active')
         if not cart.items.exists():
             raise serializers.ValidationError("Your cart is empty.")
