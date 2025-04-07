@@ -2,6 +2,8 @@ from django.contrib import admin
 from django.urls import path, include
 from activity_log.views import list_log
 
+from django.conf import settings
+from django.conf.urls.static import static
 
 
 
@@ -40,3 +42,4 @@ urlpatterns = [
     
 
 ]
+

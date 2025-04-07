@@ -52,9 +52,10 @@ INSTALLED_APPS = [
     'drf_yasg',
     'rest_framework_simplejwt',
     'rest_framework_simplejwt.token_blacklist',
-    'storages',
     'stripe',
     'django_celery_beat',
+    'cloudinary',
+    'cloudinary_storage',
 
     # Custom apps
     'users',
@@ -161,6 +162,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = 'static/'
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
@@ -176,18 +181,22 @@ CORS_ALLOWED_ORIGINS = [
 
 
 # REST framework settings
-
-
 # JWT Authentication settings
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'users.authentication.CustomJWTAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.AllowAny',  # Allow unauthenticated access by default
     ),
 }
+# REST_FRAMEWORK = {
+#     'DEFAULT_AUTHENTICATION_CLASSES': (
+#         'rest_framework_simplejwt.authentication.JWTAuthentication',
+#     ),
+    
+# }
 
 
 #jwt configuration
@@ -229,3 +238,18 @@ CACHES = {
     }
 }
 
+# # Cloudinary Configuration
+# CLOUDINARY_STORAGE = {
+#     'CLOUD_NAME': 'db6mnq0zg',
+#     'API_KEY': '715733628882824',
+#     'API_SECRET':'LfSQK1c6KalYrAft_mbZDtCXO_w',
+# }
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),
+    'API_KEY': os.getenv('CLOUDINARY_API_KEY'),
+    'API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),
+}
+
+
+#default storage
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'

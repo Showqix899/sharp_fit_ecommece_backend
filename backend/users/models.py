@@ -1,5 +1,6 @@
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
+from django.contrib.auth import get_user_model
 
 class UserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
@@ -30,3 +31,19 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = []
+
+
+#admin invitation
+import uuid
+from django.utils import timezone
+
+class AdminInvitation(models.Model):
+    token = models.UUIDField(default=uuid.uuid4, unique=True)
+    created_by = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='admin_invites')
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_used = models.BooleanField(default=False)
+    expires_at = models.DateTimeField()
+    admin=models.CharField(max_length=200,null=True,blank=True)
+
+    def is_valid(self):
+        return not self.is_used and timezone.now() < self.expires_at

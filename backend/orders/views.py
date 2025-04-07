@@ -1,11 +1,18 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-
+from rest_framework.permissions import IsAuthenticated
+from users.permissions import IsAdminUser
+from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework.generics import ListAPIView
 
 
 from django.shortcuts import get_object_or_404
 from django.core.cache import cache
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+
+
 
 
 from .models import Order, OrderItem
@@ -21,6 +28,9 @@ from notifications.models import Notification
 
 #create order view
 class CreateOrderView(APIView):
+
+    permission_classes = [IsAuthenticated]
+
     def post(self, request):
         user = request.user
         cart = Cart.objects.filter(user=user, status='active').first()
@@ -57,10 +67,12 @@ class CreateOrderView(APIView):
         cart.save()
 
 
-        return Response({'message': 'Order created successfully', 'order_id': order.id}, status=status.HTTP_201_CREATED)
+        return Response({'message': 'Order created successfully', 'order_id': order.id,'user':order.user.email,'order_total':order_total}, status=status.HTTP_201_CREATED)
 
 #order list view
-class OrderListView(APIView):
+class OrderListView(ListAPIView):
+
+    permission_classes=[IsAuthenticated]
 
     def get(self, request):
         user= request.user
@@ -81,6 +93,8 @@ class OrderListView(APIView):
 
 #get order details view
 class OrderDetailView(APIView):
+
+    permission_classes = [IsAuthenticated]
     def get(self, request, order_id):
         user = request.user
         order = get_object_or_404(Order, id=order_id, user=user)
@@ -90,6 +104,9 @@ class OrderDetailView(APIView):
 
 #cancel order view
 class CancelOrderView(APIView):
+
+    permission_classes = [IsAuthenticated]
+
     def post(self, request, order_id):
         user = request.user
         order = get_object_or_404(Order, id=order_id, user=user)
@@ -124,3 +141,17 @@ class CancelOrderView(APIView):
         send_notification_email.delay(user_email, subject, message)
 
         return Response({'message': 'Order canceled successfully'}, status=status.HTTP_200_OK)
+    
+
+
+
+#for admin to get all the orders
+class AdminOrderListView(APIView):
+    
+    permission_classes = [IsAdminUser]
+
+    def get(self, request):
+        orders = Order.objects.all().order_by('-created_at')
+        serializer = OrderSerializer(orders, many=True)
+
+        return Response(serializer.data, status=status.HTTP_200_OK)

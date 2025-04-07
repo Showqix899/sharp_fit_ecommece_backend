@@ -39,14 +39,22 @@ class ProductSerializer(serializers.ModelSerializer):
         choices=Product.CATEGORY_CHOICES
     )
 
+    # ✅ Add this line to return full Cloudinary image URL
+    image_url = serializers.SerializerMethodField()
+
     class Meta:
         model = Product
         fields = [
             'id', 'name', 'description', 'price', 'stock',
             'category', 'sizes', 'colors', 'size_ids', 'color_ids',
-            'image', 'created_at', 'updated_at'
+            'image','image_url', 'created_at', 'updated_at'
         ]
         read_only_fields = ['created_at', 'updated_at']
+
+    def get_image_url(self,obj):
+        if obj.image:
+            return obj.image.url
+        return None
 
     def create(self, validated_data):
         size_ids = validated_data.pop('size_ids', [])
@@ -54,6 +62,7 @@ class ProductSerializer(serializers.ModelSerializer):
         product = Product.objects.create(**validated_data)
         product.sizes.set(size_ids)
         product.colors.set(color_ids)
+
         return product
 
     def update(self, instance, validated_data):

@@ -8,6 +8,7 @@ from .serializers import ProductSerializer, SizeSerializer, ColorSerializer
 
 from .models import Product, Size, Color
 from .serializers import ProductSerializer, SizeSerializer, ColorSerializer
+from rest_framework.parsers import MultiPartParser, FormParser
 
 
 
@@ -46,6 +47,7 @@ class ProductListCreateView(generics.ListAPIView):
 
 # Product Create View (POST request only)
 class ProductCreateView(generics.CreateAPIView):
+    parser_classes=(MultiPartParser,FormParser)
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
 

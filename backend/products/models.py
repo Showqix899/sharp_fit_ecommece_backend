@@ -1,4 +1,6 @@
 from django.db import models
+from cloudinary.models import CloudinaryField
+
 
 class Size(models.Model):
     name = models.CharField(max_length=10, unique=True)
@@ -42,8 +44,7 @@ class Product(models.Model):
 
     sizes = models.ManyToManyField(Size, related_name='products', blank=True)
     colors = models.ManyToManyField(Color, related_name='products', blank=True)
-    image = models.ImageField(upload_to='product_images/', blank=True, null=True)
-
+    image = CloudinaryField("product_image",null=True,blank=True)
     created_at = models.DateTimeField(auto_now_add=True,null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True,null=True, blank=True)
 

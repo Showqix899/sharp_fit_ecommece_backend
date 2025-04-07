@@ -11,6 +11,9 @@ from django.contrib.auth.signals import user_logged_in, user_logged_out
 from django.dispatch import receiver
 
 
+from django.dispatch import Signal
+user_logged_in_custom = Signal()
+
 @shared_task
 def user_log_activity(user_id, action, details):
     try:
@@ -24,9 +27,29 @@ def user_log_activity(user_id, action, details):
             )
             print(f"Activity logged: {action} - {details}")
         else:
-            print(f"User not found for logging: {user_id}")
+            pass
     except Exception as e:
-        print(f"Error logging activity: {e}")
+        pass
+
+
+@shared_task
+def custom_login_activity(user_id,action,details):
+
+    try:
+        user=CustomUser.objects.filter(id=user_id).first()
+
+        if user:
+            ActivityLog.objects.create(
+                user=user,
+                action=action,
+                details=details,
+                timestamp=timezone.now()
+            )
+            print(f'activity logged: {action} - {details}')
+        else:
+            print("user not found")
+    except Exception as e:
+        print("error")
 
 
 @shared_task
@@ -62,13 +85,16 @@ def log_activity(instance_id, action, details):
 
 @receiver(user_logged_in)
 def log_user_login(sender, request, user, **kwargs):
+    
     user_ip = request.META.get('REMOTE_ADDR', 'Unknown IP')
     user_agent = request.META.get('HTTP_USER_AGENT', 'Unknown Device')
+    user=request.user
     user_log_activity.delay(
         user.id,
         "User Logged In",
         {"ip": user_ip, "user_agent": user_agent}
     )
+    print("User logged in:", user.email)
 
 
 @receiver(user_logged_out)
