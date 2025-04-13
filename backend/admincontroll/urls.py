@@ -2,7 +2,8 @@ from django.urls import path
 from .views import (
     AdminUserDeleteView,AdminUserUpdateView,
     generate_admin_invite,ListOfAdmin,ListOfUsers,
-    UserDetailsView,UpdateProductView,DeleteProductView
+    UserDetailsView,UpdateProductView,DeleteProductView,
+    UpdateMatchingProductsView,DeleteMatchingProductsView
 
 )
 
@@ -18,5 +19,8 @@ urlpatterns = [
     path('admin/user-details/',UserDetailsView.as_view(),name="user-details"),
     path('admin/update-product/',UpdateProductView.as_view(),name='product-update'),
     path('admin/product/delete/',DeleteProductView.as_view(),name="product-delete"),
+    path('admin/matching-product-updation/',UpdateMatchingProductsView.as_view(),name='update-matching-prouduct'),
+    path('admin/matching-product-deletation/',DeleteMatchingProductsView.as_view(),name='delete-matching-prouduct'),
+
 ]
 

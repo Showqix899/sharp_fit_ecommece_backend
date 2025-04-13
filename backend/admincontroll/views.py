@@ -283,3 +283,94 @@ class DeleteProductView(APIView):
         return Response({"product":f"{name}","msg":"product deleted successfully"},status=status.HTTP_200_OK)
 
 
+#updating macthicng prouduct
+class UpdateMatchingProductsView(APIView):
+    permission_classes = [IsAuthenticated, IsAdminUser]
+
+    def put(self, request):
+        name = request.query_params.get('name')
+        description = request.query_params.get('description')
+        category = request.query_params.get('category')
+        color = request.query_params.get('color')
+        size = request.query_params.get('size')
+
+        name = name.lower() if name else None
+        description = description.lower() if description else None
+
+        filters = Q()
+        if name:
+            filters &= Q(name__icontains=name)
+        if description:
+            filters &= Q(description__icontains=description)
+        if category:
+            filters &= Q(category__iexact=category)
+        if color:
+            filters &= Q(colors__name__iexact=color)
+        if size:
+            filters &= Q(sizes__name__iexact=size)
+
+        products = Product.objects.filter(filters).distinct()
+
+        if not products.exists():
+            return Response({"error": "No matching products found"}, status=status.HTTP_404_NOT_FOUND)
+
+        updated_products = []
+        errors = []
+
+        for product in products:
+            serializer = ProductSerializer(product, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                updated_products.append(serializer.data)
+            else:
+                errors.append({"product": product.name, "errors": serializer.errors})
+
+        return Response({
+            "updated": updated_products,
+            "errors": errors,
+            "msg": f"{len(updated_products)} product(s) updated"
+        }, status=status.HTTP_200_OK)
+
+
+#matching prouduct deletation
+class DeleteMatchingProductsView(APIView):
+    permission_classes = [IsAuthenticated, IsAdminUser]
+
+    def delete(self, request):
+        # Fetch query parameters
+        name = request.query_params.get('name', '').strip().lower()
+        description = request.query_params.get('description', '').strip().lower()
+        category = request.query_params.get('category')
+        color = request.query_params.get('color')
+        size = request.query_params.get('size')
+
+        # Build filters
+        filters = Q()
+        if name:
+            filters &= Q(name__icontains=name)
+        if description:
+            filters &= Q(description__icontains=description)
+        if category:
+            filters &= Q(category__iexact=category)
+        if color:
+            filters &= Q(colors__name__iexact=color)
+        if size:
+            filters &= Q(sizes__name__iexact=size)
+
+        # Query matching products
+        matching_products = Product.objects.filter(filters).distinct()
+
+        if not matching_products.exists():
+            return Response({"error": "No matching products found."}, status=status.HTTP_404_NOT_FOUND)
+
+        deleted_count = matching_products.count()
+        deleted_names = list(matching_products.values_list('name', flat=True))
+
+        # Perform deletion
+        matching_products.delete()
+
+        return Response({
+            "msg": f"Deleted {deleted_count} matching product(s).",
+            "products_deleted": deleted_names
+        }, status=status.HTTP_200_OK)
+
