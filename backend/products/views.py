@@ -1,6 +1,11 @@
 from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework import status
+from users.permissions import IsAdminUser
+
+
+
+
 from django.core.cache import cache
 
 from .models import Product, Size, Color
@@ -88,6 +93,7 @@ class ProductUpdateView(generics.UpdateAPIView):
 class ProductDestroyView(generics.DestroyAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductSerializer
+    permission_classes=[IsAdminUser]
 
     def perform_destroy(self, instance):
         # Delete the product

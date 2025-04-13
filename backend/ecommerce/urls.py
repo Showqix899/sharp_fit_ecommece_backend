@@ -35,6 +35,7 @@ urlpatterns = [
     path('api/', include('cart.urls')),
     path('api/',include('payments.urls')),
     path('logs/',list_log.as_view(),name='list_log'),
+    path('core/',include('admincontroll.urls')),
 
     #swagger url
     path('swagger<format>/', schema_view.without_ui(cache_timeout=0), name='schema-json'),

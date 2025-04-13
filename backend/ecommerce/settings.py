@@ -65,6 +65,7 @@ INSTALLED_APPS = [
     'cart',
     'orders',
     'notifications',
+    'admincontroll',
 
 ]
 

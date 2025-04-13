@@ -59,15 +59,26 @@ class ProductSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         size_ids = validated_data.pop('size_ids', [])
         color_ids = validated_data.pop('color_ids', [])
+
+        #to lower case
+        if 'name' in validated_data:
+            validated_data['name']=validated_data['name'].lower()
+
         product = Product.objects.create(**validated_data)
         product.sizes.set(size_ids)
         product.colors.set(color_ids)
+
 
         return product
 
     def update(self, instance, validated_data):
         size_ids = validated_data.pop('size_ids', None)
         color_ids = validated_data.pop('color_ids', None)
+
+
+        #to lower case
+        if 'name' in validated_data:
+            validated_data['name']=validated_data['name'].lower()
 
         if size_ids is not None:
             instance.sizes.set(size_ids)

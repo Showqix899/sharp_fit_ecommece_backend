@@ -110,18 +110,6 @@ class RegisterView(APIView):
 
 
 
-#for generating an invitation link
-@api_view(['POST'])
-@permission_classes([IsAuthenticated,IsAdminUser])
-def generate_admin_invite(request):
-
-    expiry=timezone.now()+timezone.timedelta(hours=2)
-    invite = AdminInvitation.objects.create(
-        created_by=request.user,
-        expires_at=expiry
-    )
-    link = f'http://{get_current_site(request).domain}/api/admin/register/?token={invite.token}'
-    return Response({"invite_link":link},status=201)
 
 #admin registration view
 class AdminRegisterView(APIView):
