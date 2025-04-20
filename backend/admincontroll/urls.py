@@ -3,7 +3,8 @@ from .views import (
     AdminUserDeleteView,AdminUserUpdateView,
     generate_admin_invite,ListOfAdmin,ListOfUsers,
     UserDetailsView,UpdateProductView,DeleteProductView,
-    UpdateMatchingProductsView,DeleteMatchingProductsView
+    UpdateMatchingProductsView,DeleteMatchingProductsView,
+    OrderListAdminView
 
 )
 
@@ -21,6 +22,7 @@ urlpatterns = [
     path('admin/product/delete/',DeleteProductView.as_view(),name="product-delete"),
     path('admin/matching-product-updation/',UpdateMatchingProductsView.as_view(),name='update-matching-prouduct'),
     path('admin/matching-product-deletation/',DeleteMatchingProductsView.as_view(),name='delete-matching-prouduct'),
+    path('admin/order/list/',OrderListAdminView.as_view(),name='admin-order-list'),
 
 ]
 

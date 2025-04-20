@@ -27,9 +27,9 @@ from cart.models import Cart,CartItem
 from cart.serializers import CartItemSerializer,CartSerializer,AddToCartSerializer,RemoveFromCartSerializer
 
 
-#model
+# order model
 from orders.models import Order,OrderItem
-from orders.serializers import OrderItemSerializer,OrderSerializer
+from orders.serializers import OrderItemSerializer,OrderSerializer,OrderListSerializer
 
 #payments 
 from payments.models import Payment
@@ -257,7 +257,6 @@ class DeleteProductView(APIView):
 
         name = name.lower() if name else None
         description=description.lower() if description else None
-        print(name)
 
         filters=Q()
         if name:
@@ -373,4 +372,28 @@ class DeleteMatchingProductsView(APIView):
             "msg": f"Deleted {deleted_count} matching product(s).",
             "products_deleted": deleted_names
         }, status=status.HTTP_200_OK)
+
+
+
+"""
+Admin Order view
+
+"""
+
+#order list
+class OrderListAdminView(APIView):
+
+    permission_classes=[IsAuthenticated,IsAdminUser]
+
+    def get(self,request):
+
+        try:
+            orders=Order.objects.all()
+
+            serializer=OrderListSerializer(orders,many=True)
+
+            return Response({"data":serializer.data},status=status.HTTP_200_OK)
+        except Order.DoesNotExist:
+            return Response({"msg":"nothing to show"},status=status.HTTP_204_NO_CONTENT)
+
 
