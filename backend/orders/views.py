@@ -73,7 +73,7 @@ class CreateOrderView(APIView):
 class OrderListView(ListAPIView):
 
     permission_classes=[IsAuthenticated]
-    
+    serializer_class = OrderSerializer
 
     def get(self, request):
         user= request.user

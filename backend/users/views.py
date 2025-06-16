@@ -153,7 +153,7 @@ class AdminRegisterView(APIView):
             domain = get_current_site(request).domain
             token = default_token_generator.make_token(user)
             uid = urlsafe_base64_encode(force_bytes(user.pk))
-            activation_link = f'http://{domain}/api/activate/{uid}/{token}/'
+            activation_link = f'http://{domain}/user/activate/{uid}/{token}/'
 
             message = f"Hello {user.email},\n\n"
             message += "Click the link below to activate your account:\n\n"
@@ -378,3 +378,72 @@ class UserListView(APIView):
         serializer = UserSerializer(users, many =True)
 
         return Response(serializer.data,status=status.HTTP_200_OK)
+    
+
+#user update view 
+
+class UserUpdateView(APIView):
+
+    permission_classes = [IsAuthenticated,IsAdminUser]
+
+    def put(self,request):
+
+        user_email = request.query_params.get('email')
+
+        if not user_email:
+            return Response({'message': 'Email parameter is required!'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            user = User.objects.get(email=user_email)
+            serializer = UserSerializer(user, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response({'message': 'User updated successfully!','user':{user.email}}, status=status.HTTP_200_OK)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except User.DoesNotExist:
+            return Response({'message': 'User not found!'}, status=status.HTTP_404_NOT_FOUND)
+
+
+#user delete view
+
+class UserDeleteView(APIView):
+    permission_classes = [IsAuthenticated, IsAdminUser]
+
+    def delete(self, request):
+        user_email = request.query_params.get('email')
+
+        if not user_email:
+            return Response({'message': 'Email parameter is required!'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.get(email=user_email)
+            user.delete()
+            return Response({'message': 'User deleted successfully!'}, status=status.HTTP_200_OK)
+        except User.DoesNotExist:
+            return Response({'message': 'User not found!'}, status=status.HTTP_404_NOT_FOUND)
+        
+
+
+
+
+
+
+
+
+
+
+
+
+
+#admin invite view 
+#for generating an invitation link
+@api_view(['POST'])
+@permission_classes([IsAuthenticated,IsAdminUser])
+def generate_admin_invite(request):
+
+    expiry=timezone.now()+timezone.timedelta(hours=2)
+    invite = AdminInvitation.objects.create(
+        created_by=request.user,
+        expires_at=expiry
+    )
+    link = f'http://{get_current_site(request).domain}/user/admin/register/?token={invite.token}'
+    return Response({"invite_link":link},status=201)

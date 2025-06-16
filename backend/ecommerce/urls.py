@@ -29,13 +29,13 @@ schema_view = get_schema_view(
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/', include('users.urls')),
-    path('api/', include('products.urls')),
-    path('api/',include('orders.urls')),
-    path('api/', include('cart.urls')),
-    path('api/',include('payments.urls')),
+    path('user/', include('users.urls')),
+    path('product/', include('products.urls')),
+    path('order/',include('orders.urls')),
+    path('cart/', include('cart.urls')),
+    path('payment/',include('payments.urls')),
     path('logs/',list_log.as_view(),name='list_log'),
-    path('core/',include('admincontroll.urls')),
+    path('admin/',include('admincontroll.urls')),
 
     #swagger url
     path('swagger<format>/', schema_view.without_ui(cache_timeout=0), name='schema-json'),

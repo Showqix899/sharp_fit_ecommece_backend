@@ -3,8 +3,7 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 from django.contrib.sites.shortcuts import get_current_site
 from django.db.models import Q
-
-
+from django.core.cache import cache
 
 # Create your views here.
 #user
@@ -20,6 +19,9 @@ from activity_log.models import ActivityLog
 #product 
 from products.models import Product,Color,Size
 from products.serializers import ProductSerializer,ColorSerializer,SizeSerializer
+
+from rest_framework.parsers import MultiPartParser, FormParser
+
 
 
 #cart
@@ -46,6 +48,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.decorators import api_view,permission_classes
 from rest_framework import status
+from rest_framework import generics
 
 
 
@@ -172,7 +175,7 @@ class UserDetailsView(APIView):
 #admin invite view 
 #for generating an invitation link
 @api_view(['POST'])
-@permission_classes([IsAuthenticated,IsAdminUser])
+@permission_classes([IsAuthenticated])
 def generate_admin_invite(request):
 
     expiry=timezone.now()+timezone.timedelta(hours=2)
@@ -180,7 +183,7 @@ def generate_admin_invite(request):
         created_by=request.user,
         expires_at=expiry
     )
-    link = f'http://{get_current_site(request).domain}/api/admin/register/?token={invite.token}'
+    link = f'http://{get_current_site(request).domain}/user/admin/register/?token={invite.token}'
     return Response({"invite_link":link},status=201)
 
 
@@ -192,7 +195,11 @@ def generate_admin_invite(request):
 Admin product view
 """
 
+
+
+
 #update product
+
 class UpdateProductView(APIView):
 
     permission_classes=[IsAuthenticated,IsAdminUser]
@@ -386,14 +393,44 @@ class OrderListAdminView(APIView):
     permission_classes=[IsAuthenticated,IsAdminUser]
 
     def get(self,request):
-
+        # Fetch all orders
         try:
             orders=Order.objects.all()
-
+            # Serialize the orders
             serializer=OrderListSerializer(orders,many=True)
 
             return Response({"data":serializer.data},status=status.HTTP_200_OK)
         except Order.DoesNotExist:
             return Response({"msg":"nothing to show"},status=status.HTTP_204_NO_CONTENT)
+        
+
+
+
+#order details
+class OrderDetailsView(APIView):
+    # permission_classes = [IsAuthenticated, IsAdminUser]
+
+    def get(self, request, order_id):
+        try:
+            order = Order.objects.get(id=order_id)
+            serializer = OrderSerializer(order)
+            return Response({"order": serializer.data}, status=status.HTTP_200_OK)
+        except Order.DoesNotExist:
+            return Response({"error": "Order not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+
+class OrderItemUpdateView(APIView):
+    # permission_classes = [IsAuthenticated, IsAdminUser]
+
+    def put(self, request, order_item_id):
+        try:
+            order_item = OrderItem.objects.get(id=order_item_id)
+            serializer = OrderItemSerializer(order_item, data=request.data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return Response({"order_item": serializer.data}, status=status.HTTP_200_OK)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except OrderItem.DoesNotExist:
+            return Response({"error": "Order item not found"}, status=status.HTTP_404_NOT_FOUND)
 
 

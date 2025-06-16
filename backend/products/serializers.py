@@ -45,7 +45,7 @@ class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = [
-            'id', 'name', 'description', 'price', 'stock',
+            'id', 'name', 'description', 'discount' ,'price', 'stock',
             'category', 'sizes', 'colors', 'size_ids', 'color_ids',
             'image','image_url', 'created_at', 'updated_at'
         ]
@@ -55,6 +55,11 @@ class ProductSerializer(serializers.ModelSerializer):
         if obj.image:
             return obj.image.url
         return None
+    
+    def get_final_price(self, obj):
+        if obj.discount:
+            return round(obj.price - (obj.price * (obj.discount / 100)), 2)
+        return obj.price
 
     def create(self, validated_data):
         size_ids = validated_data.pop('size_ids', [])
@@ -74,8 +79,7 @@ class ProductSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         size_ids = validated_data.pop('size_ids', None)
         color_ids = validated_data.pop('color_ids', None)
-
-
+        
         #to lower case
         if 'name' in validated_data:
             validated_data['name']=validated_data['name'].lower()

@@ -185,8 +185,9 @@ CORS_ALLOWED_ORIGINS = [
 # JWT Authentication settings
 
 REST_FRAMEWORK = {
+   
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'users.authentication.CustomJWTAuthentication',
+         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
         'rest_framework.permissions.AllowAny',  # Allow unauthenticated access by default

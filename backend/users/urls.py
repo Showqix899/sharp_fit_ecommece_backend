@@ -9,6 +9,9 @@ from .views import (
     AdminRegisterView,
     UserListView,
     TokenRefreshView,
+    UserDeleteView,
+    UserUpdateView,
+    generate_admin_invite,
 )
 
 urlpatterns = [
@@ -21,4 +24,7 @@ urlpatterns = [
     path("password-reset-confirm/<str:uidb64>/<str:token>/", PasswordResetConfirmView.as_view(), name="password_reset_confirm"),
     path("token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path('user/list/',UserListView.as_view(),name='user-list'),
+    path('delete/', UserDeleteView.as_view(), name='user-delete'),
+    path('update/', UserUpdateView.as_view(), name='user-update'),
+    path('admin/invite/', generate_admin_invite, name='admin-invite'),
 ]
